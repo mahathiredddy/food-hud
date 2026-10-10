@@ -1,0 +1,103 @@
+-- FoodHub MySQL Schema Definition
+CREATE DATABASE IF NOT EXISTS foodhub_db;
+USE foodhub_db;
+
+-- 1. Users table
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(25),
+    address VARCHAR(255),
+    role ENUM('CUSTOMER', 'ADMIN', 'RESTAURANT_OWNER') NOT NULL DEFAULT 'CUSTOMER',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 2. Restaurants table
+CREATE TABLE IF NOT EXISTS restaurants (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    address VARCHAR(255) NOT NULL,
+    phone VARCHAR(25),
+    image_url VARCHAR(500),
+    rating DECIMAL(2, 1) DEFAULT 4.5,
+    delivery_time VARCHAR(50) DEFAULT '30 mins',
+    cuisine VARCHAR(100) DEFAULT 'Multi-Cuisine',
+    is_active BOOLEAN DEFAULT TRUE,
+    owner_id BIGINT,
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 3. Food items table
+CREATE TABLE IF NOT EXISTS food_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id BIGINT NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    category VARCHAR(100) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    image_url VARCHAR(500),
+    is_available BOOLEAN DEFAULT TRUE,
+    is_veg BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4. Cart table
+CREATE TABLE IF NOT EXISTS cart (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. Cart items table
+CREATE TABLE IF NOT EXISTS cart_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cart_id BIGINT NOT NULL,
+    food_item_id BIGINT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    price DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
+    FOREIGN KEY (food_item_id) REFERENCES food_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 6. Orders table
+CREATE TABLE IF NOT EXISTS orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    restaurant_id BIGINT NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    delivery_address VARCHAR(255) NOT NULL,
+    payment_method ENUM('CASH_ON_DELIVERY', 'CARD', 'UPI') NOT NULL,
+    payment_status ENUM('PENDING', 'PAID', 'FAILED') NOT NULL DEFAULT 'PENDING',
+    order_status ENUM('PLACED', 'CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'PLACED',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 7. Order items table
+CREATE TABLE IF NOT EXISTS order_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    food_item_id BIGINT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (food_item_id) REFERENCES food_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 8. Payments table
+CREATE TABLE IF NOT EXISTS payments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL UNIQUE,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_method ENUM('CASH_ON_DELIVERY', 'CARD', 'UPI') NOT NULL,
+    payment_status ENUM('PENDING', 'PAID', 'FAILED') NOT NULL,
+    transaction_id VARCHAR(100) NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

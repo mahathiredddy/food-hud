@@ -1,0 +1,6 @@
+{
+  "name": "FoodHub – Online Food Ordering System",
+  "description": "A complete, modern, responsive Online Food Ordering System with customer ordering, visual order tracking, simulated payments, restaurant owner portal, and admin management dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
